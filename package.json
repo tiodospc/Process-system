@@ -1,0 +1,33 @@
+{
+  "name": "backend-hw-publishing",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx watch src/server.ts",
+    "start": "node dist/server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "description": "",
+  "dependencies": {
+    "bullmq": "^5.61.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "ioredis": "^5.8.1",
+    "mongoose": "^8.19.1"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.3",
+    "add": "^2.0.6",
+    "nodemon": "^3.1.10",
+    "ts-node-dev": "^2.0.0",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3",
+    "yarn": "^1.22.22"
+  }
+}

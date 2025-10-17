@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>H&W Publishing - Sistema de Pedidos</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .container { display: flex; gap: 20px; }
+        .controls { flex: 1; }
+        .logs { flex: 2; background: #f5f5f5; padding: 15px; border-radius: 5px; height: 500px; overflow-y: auto; }
+        button { padding: 10px 20px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .status { margin: 20px 0; padding: 15px; background: #e9ecef; border-radius: 5px; }
+        .log-entry { margin: 5px 0; padding: 5px; border-left: 3px solid #007bff; font-family: monospace; font-size: 14px; }
+        .log-entry:nth-child(even) { background-color: #f8f9fa; }
+    </style>
+</head>
+<body>
+    <h1>Sistema de Processamento de Pedidos - H&W Publishing</h1>
+    
+    <div class="container">
+        <div class="controls">
+            <h3>Controles</h3>
+            <button onclick="executarProcessamento()">Executar Código</button>
+            <button onclick="resetarBanco()">Reset Banco de Dados</button>
+            <button onclick="buscarStatus()">Atualizar Status</button>
+            
+            <div class="status" id="status">
+                <h4>Status dos Pedidos</h4>
+                <p>Clique em "Atualizar Status" para ver os dados</p>
+            </div>
+        </div>
+        
+        <div class="logs">
+            <h3>Log de Execução</h3>
+            <div id="logContainer"></div>
+        </div>
+    </div>
+
+    <script>
+        function addLog(message) {
+            const logContainer = document.getElementById('logContainer');
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry';
+            logEntry.innerHTML = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        async function executarProcessamento() {
+            try {
+                const response = await fetch('/api/executar', { method: 'POST' });
+                const data = await response.json();
+                addLog(`✅ ${data.message}`);
+                
+                // Atualizar logs imediatamente e depois a cada 2 segundos
+                setTimeout(buscarLogs, 1000);
+                setTimeout(buscarStatus, 2000);
+            } catch (error) {
+                addLog(`❌ Erro: ${error.message}`);
+            }
+        }
+
+        async function resetarBanco() {
+            try {
+                const response = await fetch('/api/reset', { method: 'POST' });
+                const data = await response.json();
+                document.getElementById('status').innerHTML = '<h4>Status dos Pedidos</h4><p>Banco resetado - Pronto para nova execução</p>';
+                
+                // Atualizar logs após reset
+                setTimeout(buscarLogs, 500);
+            } catch (error) {
+                addLog(`❌ Erro: ${error.message}`);
+            }
+        }
+
+        async function buscarStatus() {
+            try {
+                const response = await fetch('/api/pedidos');
+                const data = await response.json();
+                
+                document.getElementById('status').innerHTML = `
+                    <h4>Status dos Pedidos</h4>
+                    <h5>📦 Geração</h5>
+                    <p><strong>Total Gerados:</strong> ${data.totalPedidosGerados.toLocaleString()}</p>
+                    <p><strong>VIP Gerados:</strong> ${data.vipGerados.toLocaleString()}</p>
+                    <p><strong>Normal Gerados:</strong> ${data.normalGerados.toLocaleString()}</p>
+                    <p><strong>Tempo de Geração:</strong> ${data.tempoGeracaoPedidos}</p>
+                    
+                    <h5>⚙️ Processamento</h5>
+                    <p><strong>VIP Processados:</strong> ${data.vipProcessados.toLocaleString()}/${data.vipGerados.toLocaleString()}</p>
+                    <p><strong>Normal Processados:</strong> ${data.normalProcessados.toLocaleString()}/${data.normalGerados.toLocaleString()}</p>
+                    <p><strong>VIP na Fila:</strong> ${data.vipNaFila}</p>
+                    <p><strong>Normal na Fila:</strong> ${data.normalNaFila}</p>
+                    
+                    <h5>⏱️ Tempos</h5>
+                    <p><strong>Processamento VIP:</strong> ${data.tempoProcessamentoVIP}</p>
+                    <p><strong>Processamento Normal:</strong> ${data.tempoProcessamentoNormal}</p>
+                    <p><strong>Tempo Total:</strong> ${data.tempoTotalExecucao}</p>
+                `;
+                
+                // Buscar e exibir logs detalhados
+                await buscarLogs();
+            } catch (error) {
+                addLog(`❌ Erro ao buscar status: ${error.message}`);
+            }
+        }
+        
+        async function buscarLogs() {
+            try {
+                const response = await fetch('/api/logs');
+                const data = await response.json();
+                
+                // Limpar logs antigos e adicionar novos
+                const logContainer = document.getElementById('logContainer');
+                logContainer.innerHTML = '';
+                
+                data.logs.forEach(log => {
+                    const logEntry = document.createElement('div');
+                    logEntry.className = 'log-entry';
+                    
+                    let emoji = '📝';
+                    if (log.type === 'generation') emoji = '📦';
+                    if (log.type === 'processing') emoji = '⚙️';
+                    if (log.type === 'reset') emoji = '🗑️';
+                    
+                    logEntry.innerHTML = `[${log.timestamp}] ${emoji} ${log.message}`;
+                    logContainer.appendChild(logEntry);
+                });
+                
+                logContainer.scrollTop = logContainer.scrollHeight;
+            } catch (error) {
+                console.error('Erro ao buscar logs:', error);
+            }
+        }
+
+        // Atualizar status e logs automaticamente a cada 3 segundos
+        setInterval(() => {
+            buscarStatus();
+        }, 3000);
+    </script>
+</body>
+</html>
