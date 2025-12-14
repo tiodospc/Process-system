@@ -1,5 +1,4 @@
-# 📋 Documentação Completa - Sistema de Processamento de Pedidos H&W Publishing
-
+# 📋 Documentação Completa - Sistema de Processamento de Pedidos
 ## 🎯 Visão Geral
 
 Sistema de simulação de e-commerce que gera e processa 1 milhão de pedidos com priorização VIP, utilizando Node.js, TypeScript, MongoDB Atlas, Redis Cloud e BullMQ para processamento de filas.
